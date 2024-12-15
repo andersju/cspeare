@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <style>p { font-weight: bold; }</style>
+        <script>
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://example.org/');
+            xhr.send();
+        </script>
+
+    </head>
+    <body>
+    <a onclick="alert('xss');" href="javascript:alert('Hello, World!  ')">Click me</a>
+<!--<iframe src="javascript:alert('Iframe loaded!')"></iframe>
+<form action="javascript:alert('Form submitted!')">
+  <input type="text" name="username" placeholder="Enter username" />
+  <button type="submit">Submit</button>
+</form>-->
+    <p style="color: red;">wee</p>
+    </body>
+    </html>

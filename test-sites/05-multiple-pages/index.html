@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test: same-origin + multiple pages (with cross-origin)</title>
+        <script src="local.js"></script>
+        <link rel="stylesheet" href="local.css">
+    </head>
+<body>
+
+<ul>
+    <li><a href="a.html">An internal link</a></li>
+    <li><a href="b.html">Another internal link</a></li>
+    <li><a href="test.js">Internal link to a script (shouldn't be visited by the tool)</a></li>
+    <li><a href="https://www.google.com/">External link (shouldn't be visited by the tool)</a></li>
+</ul>
+
+<img src="https://x.unix.se/etc/katt.jpg" />
+
+</body>
+</html>

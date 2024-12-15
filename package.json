@@ -1,0 +1,22 @@
+{
+  "name": "cspgen",
+  "version": "1.0.0",
+  "main": "cspeare.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Anders Jensen-Urstad",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "csp_evaluator": "^1.1.2",
+    "debug": "^4.3.7",
+    "fast-shuffle": "^6.1.1",
+    "playwright": "^1.49.0",
+    "table": "^6.8.2"
+  }
+}

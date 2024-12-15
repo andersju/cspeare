@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>06: Interactive</title>
+    <link href="local.css" rel="stylesheet">
+    <script src="local.js"></script>
+  </head>
+  <body>
+    <h1>Hello, world!</h1>
+
+    <button id="catbutton" type="button" class="btn btn-primary">Load cat picture</button>
+    <div id="cat"></div>
+
+    <hr>
+
+    <button id="linuxbutton" type="button" class="btn btn-primary">Show latest Linux kernel tags</button>
+
+    <div id="linuxtags"></div>
+
+    <hr>
+
+    <form action="index.html" method="get" id="testForm">
+      <div class="mb-3">
+        <label for="exampleInputEmail1" class="form-label">What's your favorite ice cream flavor?</label>
+        <input type="icecream" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <p id="formStatus"></p>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test: same-origin + cross-origin + inline scripts and styles</title>
+        <script src="local.js"></script>
+        <link rel="stylesheet" href="local.css">
+
+        <script src="fetch.js"></script>
+        <script src="https://unpkg.com/jquery@3.7.1/dist/jquery.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+
+        <style>p { color: red; } button { color: green; }</style>
+    </head>
+    <body>
+        <p>Test!</p>
+
+        <img src="local_cat.jpg">
+
+        <img src="https://x.unix.se/etc/melon_cat.jpg">
+
+        <iframe src="local_framed.html"></iframe>
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/jNQXAC9IVRw?si=KCvkHLibovwV7rS8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+        <p><a href="https://www.example.com">Element with an attribute (but not an event handler attribute).</a></p>
+        <p><button id="btn" onclick="alert('Boo!');">Element with an event handler attribute</button></p>
+        <p><a href="javascript:alert('Clicked!');">Click me</a></p>
+        <script>console.log('Inline script being executed');</script>
+        
+        <p style="color: green;">Green text using an inline style</p>
+
+        <h1>Testing an external font. Look at this nice &.</h1>
+    </body>
+</html>
