@@ -10,6 +10,14 @@ String.prototype.truncate = function (n) {
     return this;
 }
 
+function sortTableData(a, b) {
+    if (a[0] < b[0]) return -1;
+    if (a[0] > b[0]) return 1;
+    if (a[1] < b[1]) return -1;
+    if (a[1] > b[1]) return 1;
+    return 0;
+}
+
 function printCspReportSummary(reports, heading, footer) {
     if (heading) {
         console.log(chalk.bold(heading));
@@ -17,8 +25,8 @@ function printCspReportSummary(reports, heading, footer) {
     }
 
     if (reports.length > 0) {
-        let data = [[`${chalk.bold('Effective directive')}`, `${chalk.bold('Description')}`]];
-
+        let tableHeader = [[`${chalk.bold('Effective directive')}`, `${chalk.bold('Description')}`]];
+        let data = [];
         for (const report of reports) {
             const lineNumber = report.lineNumber > 0 ? ` line ${report.lineNumber}` : '';
             if (report.effectiveDirective === 'script-src-elem'){
@@ -51,7 +59,8 @@ function printCspReportSummary(reports, heading, footer) {
             },
             drawHorizontalLine: () => false,
         };
-        console.log(table(data, tableConfig));
+        data.sort(sortTableData);
+        console.log(table([...tableHeader, ...data], tableConfig));
     } else {
         console.log('No violations were reported.')
     }
@@ -68,8 +77,18 @@ function cspEvalSummary(findings) {
         console.log(`Google's CSP evaluator library found no problems in the generated CSP.`);
         return findingsTypes;
     }
+
+    const sortedFindings = findings.slice().sort((a, b) => {
+        // CSP Evaluator finding severities: HIGH = 10, MEDIUM = 30, etc.,
+        if (a.severity < b.severity) return -1;
+        if (a.severity > b.severity) return 1;
+        if (a.typeName < b.typeName) return -1;
+        if (a.typeName > b.typeName) return 1;
+        return 0;
+    });
+
     let data = [[chalk.bold('Type'), chalk.bold('Severity'), chalk.bold('Directive'), chalk.bold('Value')]];
-    for (const [index, finding] of findings.entries()) {
+    for (const [index, finding] of sortedFindings.entries()) {
         let severityName = finding.severityName;
         if (severityName === 'MEDIUM') {
             severityName = chalk.yellow(severityName);
@@ -121,7 +140,8 @@ function inlineSummary(hashes) {
         inlineStyle: false,
         inlineStyleAttribute: false,
     };
-    let data = [[chalk.bold('Type'), chalk.bold('Code sample'), chalk.bold('URL')]];
+    let tableHeader = [[chalk.bold('Type'), chalk.bold('Code sample'), chalk.bold('URL')]];
+    let data = [];
     let jsTotals = [];
 
     if (hashes.script.length > 0) {
@@ -162,11 +182,13 @@ function inlineSummary(hashes) {
             },
             drawHorizontalLine: () => false,
         };
-        console.log(table(data, tableConfig));
+        data.sort(sortTableData);
+        console.log(table([...tableHeader, ...data], tableConfig));
         console.log(`${jsTotalsStr}\n`);
     }
 
-    let styleData = [[chalk.bold('Type'), chalk.bold('Style sample'), chalk.bold('URL')]];
+    let styleTableHeader = [[chalk.bold('Type'), chalk.bold('Style sample'), chalk.bold('URL')]];
+    let styleData = [];
     let styleTotals = [];
     if (hashes.style.length > 0) {
         styleTotals.push(`${chalk.bold(hashes.style.length)} inline <style>`);
@@ -196,7 +218,8 @@ function inlineSummary(hashes) {
             },
             drawHorizontalLine: () => false,
         };
-        console.log(table(styleData, tableConfig));
+        styleData.sort(sortTableData);
+        console.log(table([...styleTableHeader, ...styleData], tableConfig));
         console.log(`${styleTotalsStr}\n`);
     }
 
@@ -270,7 +293,7 @@ recommendations.push(`Do not use eval() in JavaScript. See:
     console.log(recommendations.map(str => `* ${str}`).join("\n"));
 }
 
-function parseAndPresentResults(results, options) {
+function parseAndPresentResults(results) {
     if (results.linksVisited.length > 0) {
         console.log(chalk.bold('Pages visited:'));
         console.log(results.linksVisited.map(str => `* ${str}`).join("\n"));

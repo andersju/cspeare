@@ -119,5 +119,5 @@ Examples:
         process.exit(1);
     }
 
-    parseAndPresentResults(results, generateCspOptions);
+    parseAndPresentResults(results);
 })();
