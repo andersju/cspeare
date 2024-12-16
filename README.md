@@ -11,16 +11,17 @@ Generated rules should be treated as a _starting point_.
 * NPM utility libraries: chalk 4.1.2, debug 4.3.7, fast-shuffle 6.1.1, table 6.8.2
 
 ### Install
-Tested with Node.js 22 LTS.
-
 Install dependencies:
-```
+```bash
+# Assumes Node.js 22 is installed
 npm install
 npx playwright install firefox chromium
 ```
 
+Tested with Node.js 22 LTS in Debian 12 Bookworm and macOS 15.1.1. 
+
 ### Use
-```
+```bash
 # Test a single URL
 node cspeare.js https://www.example.com
 
