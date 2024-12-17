@@ -25,8 +25,8 @@ Tested with Node.js 22 LTS in Debian 12 Bookworm and macOS 15.1.1.
 # Test a single URL
 node cspeare.js https://www.example.com
 
-# Test multiple URLs
-node cspeare.js https://www.example.com https://www.example2.com
+# Test multiple URLs (on the same site)
+node cspeare.js https://www.example.com https://www.example.com/something
 
 # See options
 node cspeare.js -h

@@ -31,13 +31,17 @@ const options = {
 };
 
 function displayHelp() {
-    console.log(`usage:
+    console.log(`Usage:
     ${scriptName} [--noHashes] <url ...>
     
     ${scriptName} [--noHashes] <--interactive|--numLinks <integer>> <url>
     
 Examples:
     ${scriptName} https://www.example.com/
+
+    ${scriptName} https://www.example.com/ https://www.example.com/something/
+
+    ${scriptName} --noHashes https://www.example.com/
     
     ${scriptName} --interactive https://www.example.com/
     
