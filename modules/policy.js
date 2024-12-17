@@ -86,11 +86,11 @@ function updatePolicy(csp, results) {
             valueToAdd = blockedUri;
         }
 
-        if (effectiveDirective === 'frame-src' && valueToAdd === "'self'") {
+        if (['frame-src', 'object-src'].includes(effectiveDirective) && valueToAdd === "'self'") {
             if (!('frame-ancestors') in csp) {
                 csp['frame-ancestors'] = new Set();
             }
-            csp['frame-ancestors'] .delete("'none'");
+            csp['frame-ancestors'].delete("'none'");
             csp['frame-ancestors'].add("'self'");
         }
 
