@@ -7,7 +7,7 @@ const debug = require('debug')('csp');
 const { get_hashes } = require('./hashing.js');
 const { updatePolicy, generatePolicyString, evaluateCsp, sameOrigin } = require('./policy.js');
 
-module.exports = { generateCsp };
+module.exports = { generateCsp, sameOrigin };
 
 async function visitSite(options, csp, headless=true) {
     // To make it easy to switch for debugging purposes

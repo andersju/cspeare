@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const { parseArgs } = require('node:util');
-const { generateCsp } = require('./modules/csp.js');
+const { generateCsp, sameOrigin } = require('./modules/csp.js');
 const { parseAndPresentResults } = require('./modules/results.js');
 const { CspParser } = require('csp_evaluator/dist/parser.js');
 const path = require('path');
@@ -75,6 +75,17 @@ Examples:
         console.error('--interactive cannot be used if multiple URLs are specified.');
         displayHelp();
         process.exit(1);
+    }
+
+    // If multiple URLs have been specified, ensure they all share the same origin
+    if (positionals.length > 1) {
+        const firstUrl = positionals[0];
+        for (let i = 1; i < positionals.length; i++) {
+            if (!sameOrigin(firstUrl, positionals[i])) {
+                console.error('Error: all URLs must have the same origin ("be on the same site").');
+                process.exit(1);
+            }
+        }
     }
 
     let initialCsp = {
