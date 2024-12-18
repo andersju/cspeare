@@ -97,12 +97,10 @@ Examples:
         'form-action': new Set(["'none'"]),
         'frame-ancestors': new Set(["'none'"]),
         'base-uri': new Set(["'none'"]),
-        // script-src, style-src, etc. use default-src as a fallback value
+        // script-src, style-src, etc. use default-src as a fallback value. Empty script-src
+        // and style-src are set here just to make it easier for the program elsewhere.
         'script-src': new Set(),
-        'style-src': new Set(),
-        'connect-src': new Set(),
-        'frame-src': new Set(),
-        'img-src': new Set(),
+        'style-src': new Set()
     }
 
     // If user has specified additional CSP, parse it and add it to initialCsp
