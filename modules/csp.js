@@ -9,43 +9,15 @@ const { updatePolicy, generatePolicyString, evaluateCsp, sameOrigin } = require(
 
 module.exports = { generateCsp, sameOrigin };
 
-async function visitSite(options, csp, headless=true) {
-    // To make it easy to switch for debugging purposes
-    const browserChoice = 'chromium' // 'firefox' or 'chromium'
-
-    debug(`Visiting ${options.urls} and injecting header Content-Security-Policy-Report-Only: ${csp}`);
-    let results = {
-        "reports": new Set(),
-        "hashes": {
-            "script": [],
-            "jsNavScript": [],
-            "style": [],
-            "styleAttribute": [],
-            "inlineEvents": [],
-        },
-        "hashesWereAdded": false,
-        "documentURI": "",
-    }
-
-    let browser;
-    let browserOptions;
-    if (browserChoice === 'firefox') {
-        browser = await firefox.launch({
-            headless: headless,
-            bypassCSP: false,
-        });
-        browserOptions = desktopfirefox;
+async function setupBrowser(options, headless) {
+    if (options.browser == 'firefox') {
+        return [await firefox.launch({ headless: headless }), desktopfirefox]
     } else {
-        browser = await chromium.launch({
-            headless: headless,
-            bypassCSP: false,
-        });
-        browserOptions = desktopchromium;
+        return [await chromium.launch({ headless: headless }), desktopchromium]
     }
+}
 
-    const context = await browser.newContext({ ...browserOptions });
-    const page = await context.newPage();
-
+async function configurePage(page, results) {
     // Inject code that listens for policy violations and logs them
     await page.addInitScript({ content: `
         document.addEventListener('securitypolicyviolation', (e) => {
@@ -74,7 +46,9 @@ async function visitSite(options, csp, headless=true) {
             results.reports.add(reportData);
         }
     });
+}
 
+async function setupInterception(page, csp) {
     // Intercept responses so we can inject/override CSP
     await page.route('**/*', async route => {
         const request = await route.request();
@@ -125,7 +99,26 @@ async function visitSite(options, csp, headless=true) {
             await route.continue();
         }
     });
-    
+}
+
+async function randomizeLinks(allLinks, initialHost) {
+    return fastShuffle.shuffle(
+        allLinks
+            .filter((link) => {
+                const url = new URL(link);
+                // Exclude links that are (very likely) to non-HTML content
+                if (/\.(jpg|png|gif|pdf|exe|zip|js|json)$/i.test(url.pathname)) {
+                    return false;
+                }
+                // Include links where the host is the same as the page we're on
+                if (url.host === initialHost) {
+                    return true;
+                }
+            })
+    );
+}
+
+async function navigateSite(options, page, results) {
     const firstVisit = options.linksVisited.length === 0;
     for (const url of options.urls) {
         // If there's something in the linksVisited array, it means this is not
@@ -164,20 +157,9 @@ async function visitSite(options, csp, headless=true) {
                 });
 
                 // Randomize the list of links
-                let potentialLinks = fastShuffle.shuffle(
-                    allLinks
-                        .filter((link) => {
-                            const url = new URL(link);
-                            // Exclude links that are (very likely) to non-HTML content
-                            if (/\.(jpg|png|gif|pdf|exe|zip|js|json)$/i.test(url.pathname)) {
-                                return false;
-                            }
-                            // Include links where the host is the same as the page we're on
-                            if (url.host === initialHost) {
-                                return true;
-                            }
-                        })
-                );
+                let potentialLinks = await randomizeLinks(allLinks, initialHost);
+                console.log(potentialLinks);
+
                 debug(`${potentialLinks.length} links found`)
                 debug(`Potential links: ${potentialLinks}`);
                 for (const potentialLink of potentialLinks) {
@@ -196,7 +178,9 @@ async function visitSite(options, csp, headless=true) {
             }
         }
     }
+}
 
+async function closeBrowser(page, context, browser, headless) {
     if (!(headless)) {
         // If running in the foreground, this lets us keep the browser open and keep
         // collecting violation reports until the user closes the browser.
@@ -209,7 +193,9 @@ async function visitSite(options, csp, headless=true) {
 
     await context.close();
     await browser.close();
+}
 
+function generateReport(results) {
     // Turn set into array so we can use filter/map. At this point we might have
     // CSP violations from documents other than the main one we're visiting, e.g.,
     // an iframed page, so we filter out those.
@@ -225,7 +211,33 @@ async function visitSite(options, csp, headless=true) {
     return results;
 }
 
-async function _generateCsp(options, csp, count, initialReports, initialHashes) {
+async function visitSite(options, csp, headless=true) {
+    debug(`Visiting ${options.urls} and injecting header Content-Security-Policy-Report-Only: ${csp}`);
+    let results = {
+        "reports": new Set(),
+        "hashes": {
+            "script": [],
+            "jsNavScript": [],
+            "style": [],
+            "styleAttribute": [],
+            "inlineEvents": [],
+        },
+        "hashesWereAdded": false,
+        "documentURI": "",
+    }
+
+    let [browser, browserOptions] = await setupBrowser(options);
+    const context = await browser.newContext({ ...browserOptions });
+    const page = await context.newPage();
+    await configurePage(page, results);
+    await setupInterception(page, csp);
+    await navigateSite(options, page, results);
+    await closeBrowser(page, context, browser, headless);
+
+    return generateReport(results);
+}
+
+function checkMaxAttempts(options, count) {
     // Prevent infinite loop of website visits
     if (count > 5) {
         debug(csp);
@@ -235,12 +247,46 @@ async function _generateCsp(options, csp, count, initialReports, initialHashes) 
         }
         process.exit(1);
     }
+}
+
+function checkIfModeShouldBeHeadless(options, count) {
+    if (options.interactive && count === 0) {
+        return false;
+    }
+    return true;
+}
+
+function shouldRetryWithUpdatedCsp(results, count) {
+    // If CSP violations were reported, try again with CSP updated based on the violations.
+    // Also try again if it was 1) the first visit, and 2) there were no violations but
+    // hashes of inline scripts/styles were found (scripts that only execute on user interaction
+    // would not have generated a CSP violation report here).
+    return results.reports.length > 0 || (count === 0 && results.hashesWereAdded);
+}
+
+async function possiblyVisitOneLastTime(results, findings, tmpCsp, options) {
+    if (findings.length > 0) {
+        debug(`CSP rule warnings detected, or script detected; trying a final time to gather more information`)
+        for (const finding of findings) {
+            if (finding.severityName === 'HIGH') { //&& finding.typeName !== 'SCRIPT_ALLOWLIST_BYPASS') {
+                if (tmpCsp[finding.directive].delete(finding.value)) {
+                    debug(`Deleted ${finding.value} from ${tmpCsp[finding.directive]}`);
+                }
+            }
+        }
+        debug("Visiting site with modified CSP")
+        return await visitSite(options, generatePolicyString(tmpCsp), true);
+    } else {
+        return results;
+    }
+}
+
+async function _generateCsp(options, csp, count, initialReports, initialHashes) {
+    checkMaxAttempts(options, count);
+    const headless = checkIfModeShouldBeHeadless(options, count);
+
     debug(`CSP is currently ${JSON.stringify(csp)}`);
 
-    let headless = true;
-    if (count === 0 && options.interactive) {
-        headless = false;
-    }
     let results = await visitSite(options, generatePolicyString(csp), headless);
     if (count === 0) {
         initialReports = results.reports;
@@ -249,11 +295,7 @@ async function _generateCsp(options, csp, count, initialReports, initialHashes) 
         options['initialCspStringPretty'] = generatePolicyString(csp, true);
     }
 
-    // If CSP violations were reported, try again with CSP updated based on the violations.
-    // Also try again if it was 1) the first visit, and 2) there were no violations but
-    // hashes of inline scripts/styles were found (scripts that only execute on user interaction
-    // would not have generated a CSP violation report here).
-    if (results.reports.length > 0 || (count === 0 && results.hashesWereAdded)) {
+    if (shouldRetryWithUpdatedCsp(results, count)) {
         debug("Trying again with modified CSP")
         count++;
         csp = await updatePolicy(csp, results);
@@ -270,18 +312,7 @@ async function _generateCsp(options, csp, count, initialReports, initialHashes) 
     // violation reports this time.
     let findings = evaluateCsp(csp);
     let tmpCsp = structuredClone(csp);
-    if (findings.length > 0) { //|| "script-src" in csp) {
-        debug(`CSP rule warnings detected, or script detected; trying a final time to gather more information`)
-        for (const finding of findings) {
-            if (finding.severityName === 'HIGH') { //&& finding.typeName !== 'SCRIPT_ALLOWLIST_BYPASS') {
-                if (tmpCsp[finding.directive].delete(finding.value)) {
-                    debug(`Deleted ${finding.value} from ${tmpCsp[finding.directive]}`);
-                }
-            }
-        }
-        debug("Visiting site with modified CSP")
-        results = await visitSite(options, generatePolicyString(tmpCsp), true);
-    }
+    results = await possiblyVisitOneLastTime(results, findings, tmpCsp, options);
 
     return {
         'csp': csp,

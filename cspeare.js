@@ -27,14 +27,19 @@ const options = {
     interactive: {
         type: 'boolean',
         short: 'i'
+    },
+    browser: {
+        type: 'string',
+        short: 'b',
+        default: 'chromium'
     }
 };
 
 function displayHelp() {
     console.log(`Usage:
-    ${scriptName} [--noHashes] <url ...>
+    ${scriptName} [--noHashes] [--browser <chromium|firefox>] <url ...>
     
-    ${scriptName} [--noHashes] <--interactive|--numLinks <integer>> <url>
+    ${scriptName} [--noHashes] [--browser <chromium|firefox>] <--interactive|--numLinks <integer>> <url>
     
 Examples:
     ${scriptName} https://www.example.com/
@@ -46,6 +51,8 @@ Examples:
     ${scriptName} --interactive https://www.example.com/
     
     ${scriptName} --numLinks 5 https://www.example.com/
+
+The default browser is chromium.
     `);
 }
 
@@ -77,6 +84,12 @@ Examples:
 
     if (values.interactive && values.numLinks > 0) {
         console.error('--interactive cannot be used if multiple URLs are specified.');
+        displayHelp();
+        process.exit(1);
+    }
+
+    if (values.browser && !(['chromium', 'firefox'].includes(values.browser))) {
+        console.error('Unknown browser type specified.');
         displayHelp();
         process.exit(1);
     }
@@ -122,6 +135,7 @@ Examples:
         'numLinks': parseInt(values.numLinks),
         'noHashes': values.noHashes,
         'interactive': values.interactive,
+        'browser': values.browser,
         'linksVisited': [],
     }
 

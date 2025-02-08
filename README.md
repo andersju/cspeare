@@ -6,7 +6,7 @@ Generated rules should be treated as a _starting point_.
 
 ### Software used
 * [Node.js](https://nodejs.org) v22.11.0 (LTS)
-* [Playwright](https://playwright.dev/) 1.49.0 with Chromium 131.0.6778.33
+* [Playwright](https://playwright.dev/) 1.50.1 with Chromium 133.0.6943.16
 * [CSP Evaluator Core Library](https://github.com/google/csp-evaluator) 1.1.2
 * NPM utility libraries: chalk 4.1.2, debug 4.3.7, fast-shuffle 6.1.1, table 6.8.2
 
