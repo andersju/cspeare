@@ -4,7 +4,7 @@ const desktopchromium = devices['Desktop Chrome'];
 const fastShuffle = require('fast-shuffle');
 const debug = require('debug')('csp');
 
-const { get_hashes } = require('./hashing.js');
+const { getHashes } = require('./hashing.js');
 const { updatePolicy, generatePolicyString, evaluateCsp, sameOrigin } = require('./policy.js');
 
 module.exports = { generateCsp, sameOrigin };
@@ -144,7 +144,7 @@ async function navigateSite(options, page, results) {
             await page.waitForLoadState('load');
             await page.waitForLoadState('networkidle');
 
-            await get_hashes(page, options, results);
+            await getHashes(page, options, results);
 
             // If started with --numLinks n, visit up to n links found on the page
             if (options.numLinks > 0) {
@@ -166,7 +166,7 @@ async function navigateSite(options, page, results) {
                     debug(`Visiting link ${potentialLink}`);
                     const response = await page.goto(potentialLink);
                     if ('content-type' in response.headers() && response.headers()['content-type'].includes('text/html')) {
-                        await get_hashes(page, options, results)
+                        await getHashes(page, options, results)
                         options['linksVisited'].push(potentialLink);
                     } else {
                         debug(`Potential link ${potentialLink} not text/html; skipping`)
@@ -237,7 +237,7 @@ async function visitSite(options, csp, headless=true) {
     return generateReport(results);
 }
 
-function checkMaxAttempts(options, count) {
+function checkMaxAttempts(options, count, csp) {
     // Prevent infinite loop of website visits
     if (count > 5) {
         debug(csp);
@@ -282,7 +282,7 @@ async function possiblyVisitOneLastTime(results, findings, tmpCsp, options) {
 }
 
 async function _generateCsp(options, csp, count, initialReports, initialHashes) {
-    checkMaxAttempts(options, count);
+    checkMaxAttempts(options, count, csp);
     const headless = checkIfModeShouldBeHeadless(options, count);
 
     debug(`CSP is currently ${JSON.stringify(csp)}`);

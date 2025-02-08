@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-module.exports = {get_hashes, }
+module.exports = { getHashes, }
 
 String.prototype.truncate = function (n) {
     if (this.length > n) {
@@ -13,13 +13,13 @@ function cleanSample(sample) {
     return sample.trim().replace(/[^\p{L}\p{N}\p{P}\p{S} ]/gu, '').truncate(20);
 }
 
-async function get_hashes(page, options, results) {
+async function getHashes(page, options, results) {
     if (!(options.noHashes)) {
-        results.hashes.script.push(...await get_script_content_hashes(page));
-        results.hashes.inlineEvents.push(...await get_inline_event_handlers(page));
-        results.hashes.jsNavScript.push(...await get_js_nav_target_hashes(page));
-        results.hashes.style.push(...await get_style_content_hashes(page));
-        results.hashes.styleAttribute.push(...await get_style_attribute_content_hashes(page));
+        results.hashes.script.push(...await getScriptContentHashes(page));
+        results.hashes.inlineEvents.push(...await getInlineEventHandlers(page));
+        results.hashes.jsNavScript.push(...await getJsNavTargetHashes(page));
+        results.hashes.style.push(...await getStyleContentHashes(page));
+        results.hashes.styleAttribute.push(...await getStyleAttributeContentHashes(page));
 
         if (results.hashes.script.length > 0 ||
             results.hashes.jsNavScript.length > 0 ||
@@ -31,13 +31,13 @@ async function get_hashes(page, options, results) {
     }
 }
 
-function get_content_hash(message) {
+function getContentHash(message) {
     const hash = crypto.createHash('sha256');
     return hash.update(message).digest('base64');
 }
 
 // e.g. <script>console.log('Hello, world.');</script>
-async function get_script_content_hashes(page) {
+async function getScriptContentHashes(page) {
     const inlineScripts = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('script'))
             .filter(script => !script.src)
@@ -47,7 +47,7 @@ async function get_script_content_hashes(page) {
     for (const inlineScript of inlineScripts) {
         hashes.push({
             'url': page.url(),
-            'hash': get_content_hash(inlineScript),
+            'hash': getContentHash(inlineScript),
             'sample': cleanSample(inlineScript)
         })
     }
@@ -55,7 +55,7 @@ async function get_script_content_hashes(page) {
 }
 
 // e.g. <a href="javascript:alert('Hello, world.');</a>
-async function get_js_nav_target_hashes(page) {
+async function getJsNavTargetHashes(page) {
     const jsNavTargets = await page.evaluate(() => {
         return Array.from(document.querySelectorAll(
             'a[href^="javascript:"],' +
@@ -85,7 +85,7 @@ async function get_js_nav_target_hashes(page) {
             'elementName': navTarget.elementName,
             'attributeName': navTarget.attributeName,
             'url': page.url(),
-            'hash': get_content_hash(navTarget.code),
+            'hash': getContentHash(navTarget.code),
             'sample': cleanSample(navTarget.code)
         });
     }
@@ -93,7 +93,7 @@ async function get_js_nav_target_hashes(page) {
 }
 
 // e.g. <style>p { color: red; }</style>
-async function get_style_content_hashes(page) {
+async function getStyleContentHashes(page) {
     const inlineStyles = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('style'))
             .map(el => el.textContent );
@@ -103,7 +103,7 @@ async function get_style_content_hashes(page) {
     for (const inlineStyle of inlineStyles) {
         hashes.push({
             'url': page.url(),
-            'hash': get_content_hash(inlineStyle),
+            'hash': getContentHash(inlineStyle),
             'sample': cleanSample(inlineStyle)
         });
     }
@@ -111,7 +111,7 @@ async function get_style_content_hashes(page) {
 }
 
 // e.g. <p style="color: red;">
-async function get_style_attribute_content_hashes(page) {
+async function getStyleAttributeContentHashes(page) {
     const inlineStyles = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('[style]'))
             .map(el => { return {'elementName': el.localName, 'code': el.getAttribute('style') }});
@@ -122,7 +122,7 @@ async function get_style_attribute_content_hashes(page) {
         hashes.push({
             'elementName': el.elementName,
             'url': page.url(),
-            'hash': get_content_hash(el.code),
+            'hash': getContentHash(el.code),
             'sample': cleanSample(el.code)
         })
     }
@@ -130,7 +130,7 @@ async function get_style_attribute_content_hashes(page) {
 }
 
 // e.g. <button onclick="alert('Hello world');">
-async function get_inline_event_handlers(page) {
+async function getInlineEventHandlers(page) {
     // Let the browser extract all elements that have attributes
     const elementsWithAttributes = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('*'))
@@ -154,10 +154,10 @@ async function get_inline_event_handlers(page) {
         // An element can have multiple attributes and multiple event handlers
         for (const attribute of el['attributes']) {
             // Check if attribute is an event handler
-            if (inline_event_handlers.includes(attribute.localName)) {
+            if (inlineEventHandlers.includes(attribute.localName)) {
                 matchingAttributes.push({
                     'name': attribute.localName,
-                    'hash': get_content_hash(attribute.textContent),
+                    'hash': getContentHash(attribute.textContent),
                     'sample': cleanSample(attribute.textContent)
                 });
             }
@@ -175,7 +175,7 @@ async function get_inline_event_handlers(page) {
 }
 
 // https://html.spec.whatwg.org/#event-handlers-on-elements,-document-objects,-and-window-objects
-const inline_event_handlers = [
+const inlineEventHandlers = [
     "onabort",
     "onafterprint",
     "onauxclick",
