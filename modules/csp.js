@@ -30,7 +30,7 @@ async function configurePage(page, results) {
             'lineNumber': e.lineNumber,
             'originalPolicy': e.originalPolicy,
             'referrer': e.referrer,
-            'sample': e.sample,
+            'sample': e.sample.replace(/[^\p{L}\p{N}\p{P}\p{S} ]/gu, ''),
             'sourceFile': e.sourceFile,
             'statusCode': e.statusCode,
             'violatedDirective': e.violatedDirective,

@@ -9,6 +9,10 @@ String.prototype.truncate = function (n) {
     return this;
 }
 
+function cleanSample(sample) {
+    return sample.trim().replace(/[^\p{L}\p{N}\p{P}\p{S} ]/gu, '').truncate(20);
+}
+
 async function get_hashes(page, options, results) {
     if (!(options.noHashes)) {
         results.hashes.script.push(...await get_script_content_hashes(page));
@@ -44,7 +48,7 @@ async function get_script_content_hashes(page) {
         hashes.push({
             'url': page.url(),
             'hash': get_content_hash(inlineScript),
-            'sample': inlineScript.trim().truncate(20)
+            'sample': cleanSample(inlineScript)
         })
     }
     return hashes;
@@ -82,7 +86,7 @@ async function get_js_nav_target_hashes(page) {
             'attributeName': navTarget.attributeName,
             'url': page.url(),
             'hash': get_content_hash(navTarget.code),
-            'sample': navTarget.code.trim().truncate(20)
+            'sample': cleanSample(navTarget.code)
         });
     }
     return hashes;
@@ -100,7 +104,7 @@ async function get_style_content_hashes(page) {
         hashes.push({
             'url': page.url(),
             'hash': get_content_hash(inlineStyle),
-            'sample': inlineStyle.trim().truncate(20)
+            'sample': cleanSample(inlineStyle)
         });
     }
     return hashes;
@@ -119,7 +123,7 @@ async function get_style_attribute_content_hashes(page) {
             'elementName': el.elementName,
             'url': page.url(),
             'hash': get_content_hash(el.code),
-            'sample': el.code.trim().truncate(20)
+            'sample': cleanSample(el.code)
         })
     }
     return hashes;
@@ -154,7 +158,7 @@ async function get_inline_event_handlers(page) {
                 matchingAttributes.push({
                     'name': attribute.localName,
                     'hash': get_content_hash(attribute.textContent),
-                    'sample': attribute.textContent.trim().truncate(20)
+                    'sample': cleanSample(attribute.textContent)
                 });
             }
         }
