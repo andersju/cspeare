@@ -16,7 +16,7 @@
     "csp_evaluator": "^1.1.2",
     "debug": "^4.3.7",
     "fast-shuffle": "^6.1.1",
-    "playwright": "^1.49.0",
+    "playwright": "^1.50.1",
     "table": "^6.8.2"
   }
 }
