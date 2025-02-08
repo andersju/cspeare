@@ -14,7 +14,7 @@ function cleanSample(sample) {
 }
 
 async function getHashes(page, options, results) {
-    if (!(options.noHashes)) {
+    if (options.hashInline) {
         results.hashes.script.push(...await getScriptContentHashes(page));
         results.hashes.inlineEvents.push(...await getInlineEventHandlers(page));
         results.hashes.jsNavScript.push(...await getJsNavTargetHashes(page));

@@ -15,7 +15,7 @@ Install dependencies:
 ```bash
 # Assumes Node.js 22 is installed
 npm install
-npx playwright install chromium
+npx playwright install
 ```
 
 Tested with Node.js 22 LTS in Debian 12 Bookworm and macOS 15.1.1. 
