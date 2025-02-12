@@ -48,7 +48,8 @@ async function configurePage(page, results) {
     });
 }
 
-async function setupInterception(page, csp) {
+async function setupInterception(page, csp, options) {
+    const firstVisit = options.linksVisited.length === 0;
     // Intercept responses so we can inject/override CSP
     await page.route('**/*', async route => {
         const request = await route.request();
@@ -73,17 +74,23 @@ async function setupInterception(page, csp) {
                     const metaCspRegex = /<meta\b[^>]*\bhttp-equiv=['"]content-security-policy['"][^>]*>/gi;
                     const metaCspMatch = body.match(metaCspRegex);
                     if (metaCspMatch) {
-                        console.log(`Existing CSP found in meta element; removing: ${metaCspMatch[0]}`);
+                        if (firstVisit) {
+                            console.log(`Existing CSP found in meta element; removing: ${metaCspMatch[0]}`);
+                        }
                         body = body.replace(metaCspRegex, '');
                     }
 
                     let headers = response.headers();
                     if ('content-security-policy' in headers) {
-                        console.log(`Ignoring existing CSP header: ${headers['content-security-policy']}`);
+                        if (firstVisit) {
+                            console.log(`Ignoring existing CSP header: ${headers['content-security-policy']}`);
+                        }
                         delete headers['content-security-policy']
                     }
                     if ('content-security-policy-report-only' in headers) {
-                        console.log(`Ignoring existing CSP report-only header: ${headers['content-security-policy-report-only']}`);
+                        if (firstVisit) {
+                            console.log(`Ignoring existing CSP report-only header: ${headers['content-security-policy-report-only']}`);
+                        }
                         delete headers['content-security-policy.-report-only'];
                     }
                     headers['content-security-policy-report-only'] = csp;
@@ -230,7 +237,7 @@ async function visitSite(options, csp, headless=true) {
     const context = await browser.newContext({ ...browserOptions });
     const page = await context.newPage();
     await configurePage(page, results);
-    await setupInterception(page, csp);
+    await setupInterception(page, csp, options);
     await navigateSite(options, page, results);
     await closeBrowser(page, context, browser, headless);
 
