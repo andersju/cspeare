@@ -16,7 +16,7 @@ const options = {
         short: 'n',
         default: '0',
     },
-    hashInline: {
+    noHashes: {
         type: 'boolean',
         default: false,
     },
@@ -37,16 +37,16 @@ const options = {
 
 function displayHelp() {
     console.log(`Usage:
-    ${scriptName} [--hashInline] [--browser <chromium|firefox>] <url ...>
+    ${scriptName} [--noHashes] [--browser <chromium|firefox>] <url ...>
     
-    ${scriptName} [--hashInline] [--browser <chromium|firefox>] <--interactive|--numLinks <integer>> <url>
+    ${scriptName} [--noHashes] [--browser <chromium|firefox>] <--interactive|--numLinks <integer>> <url>
     
 Examples:
     ${scriptName} https://www.example.com/
 
     ${scriptName} https://www.example.com/ https://www.example.com/something/
 
-    ${scriptName} --hashInline https://www.example.com/
+    ${scriptName} --noHashes https://www.example.com/
     
     ${scriptName} --interactive https://www.example.com/
     
@@ -133,7 +133,7 @@ The default browser is chromium.
     let generateCspOptions = {
         'urls': positionals,
         'numLinks': parseInt(values.numLinks),
-        'hashInline': values.hashInline,
+        'noHashes': values.noHashes,
         'interactive': values.interactive,
         'browser': values.browser,
         'linksVisited': [],

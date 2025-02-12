@@ -238,11 +238,6 @@ function printRecommendations(results, inlineResults, findingsTypes) {
     if (inlineResults.inlineScript || findingsTypes.has('SCRIPT_UNSAFE_INLINE')) {
         recommendations.push(`Move inline scripts to separate files. See:
   - https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html#refactoring-inline-code\n`);
-
-        recommendations.push(`If moving inline scripts to separate files is impossible, you can explicitly allow
-  certain inline scripts by specifying nonce or hash sources. Run cspeare again
-  with the --hashInline option. See also:
-  - https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src#unsafe_inline_script\n`)
     }
 
     if (inlineResults.inlineEvent || findingsTypes.has('SCRIPT_UNSAFE_HASHES')) {

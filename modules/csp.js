@@ -249,8 +249,8 @@ function checkMaxAttempts(options, count, csp) {
     if (count > 5) {
         debug(csp);
         console.error("Error: couldn't determine valid rules within max attempts.");
-        if (options.hashInline) {
-            console.error("Try again without --hashInline.");
+        if (!(options.noHashes)) {
+            console.error("Try again with --noHashes.");
         }
         process.exit(1);
     }
