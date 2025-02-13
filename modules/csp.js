@@ -233,7 +233,7 @@ async function visitSite(options, csp, headless=true) {
         "documentURI": "",
     }
 
-    let [browser, browserOptions] = await setupBrowser(options);
+    let [browser, browserOptions] = await setupBrowser(options, headless);
     const context = await browser.newContext({ ...browserOptions });
     const page = await context.newPage();
     await configurePage(page, results);
